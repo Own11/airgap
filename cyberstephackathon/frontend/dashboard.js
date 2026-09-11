@@ -10,7 +10,7 @@ async function api(url, options = {}) {
 }
 
 async function init() {
-  try { const user = await api('/api/auth/me'); $('#user').textContent = user.name; await loadMeetings(); }
+  try { const user = await api('/api/auth/me'); $('#user').textContent = user.name; $('#sidebar-user').textContent = user.name; $('#avatar').textContent = user.name.charAt(0).toUpperCase(); await loadMeetings(); }
   catch { location.href = '/'; }
   $('#choose').onclick = () => $('#file').click();
   $('#file').onchange = () => selectFile($('#file').files[0]);
@@ -19,6 +19,8 @@ async function init() {
   $('#search').oninput = renderMeetings;
   $('#close-results').onclick = () => { $('#results').hidden = true; state.selected = null; };
   $('#logout').onclick = async () => { await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' }); location.href = '/'; };
+  $('#sidebar-logout').onclick = () => $('#logout').click();
+  $('#new-meeting').onclick = () => $('#drop').scrollIntoView({ behavior: 'smooth', block: 'center' });
   $('#drop').ondragover = (event) => { event.preventDefault(); $('#drop').classList.add('dragging'); };
   $('#drop').ondragleave = () => $('#drop').classList.remove('dragging');
   $('#drop').ondrop = (event) => { event.preventDefault(); $('#drop').classList.remove('dragging'); selectFile(event.dataTransfer.files[0]); };
@@ -59,8 +61,15 @@ async function processMeeting(id) {
 
 async function loadMeetings(showLoading = true) {
   if (showLoading) $('#meetings').innerHTML = '<div class="loading-state">Загрузка встреч...</div>';
-  try { state.meetings = await api('/api/meetings'); renderMeetings(); }
+  try { state.meetings = await api('/api/meetings'); renderHistory(); renderMeetings(); }
   catch (error) { $('#meetings').innerHTML = `<div class="empty-state"><b>Не удалось загрузить встречи</b><span>${error.message}</span></div>`; }
+}
+
+function renderHistory() {
+  const history = $('#history-list');
+  if (!state.meetings.length) { history.innerHTML = '<span class="history-empty">Пока нет встреч</span>'; return; }
+  history.innerHTML = state.meetings.slice(0, 12).map(item => `<button class="history-item" data-history="${item.id}"><span class="history-dot">●</span><span>${escapeHtml(item.filename)}</span></button>`).join('');
+  document.querySelectorAll('[data-history]').forEach(item => item.onclick = () => openMeeting(Number(item.dataset.history)));
 }
 
 function renderMeetings() {
