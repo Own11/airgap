@@ -17,7 +17,7 @@ async function init() {
   $('#send').onclick = upload;
   $('#refresh').onclick = loadMeetings;
   $('#search').oninput = renderMeetings;
-  $('#close-results').onclick = () => { $('#results').hidden = true; state.selected = null; };
+  $('#close-results').onclick = () => { $('#results').hidden = true; $('.workspace').classList.remove('show-results'); state.selected = null; };
   $('#logout').onclick = async () => { await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' }); location.href = '/'; };
   $('#sidebar-logout').onclick = () => $('#logout').click();
   $('#new-meeting').onclick = () => $('#drop').scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -82,8 +82,8 @@ function renderMeetings() {
 }
 
 async function openMeeting(id) { const meeting = await api(`/api/meetings/${id}`); if (meeting.protocol_json) showResults(meeting.protocol_json, meeting); else if (meeting.status === 'uploaded' || meeting.status === 'failed') processMeeting(id); else setStatus('Встреча ещё обрабатывается...'); }
-async function removeMeeting(id) { if (!confirm('Удалить эту встречу?')) return; await api(`/api/meetings/${id}`, { method: 'DELETE' }); $('#results').hidden = true; await loadMeetings(); }
-function showResults(protocol, meeting) { state.selected = meeting.id; $('#result-title').textContent = meeting.filename; $('#summary').textContent = protocol.summary || 'Нет summary'; fillList('#decisions', protocol.decisions); fillList('#actions', protocol.action_items, true); fillList('#risks', protocol.risks); ['json', 'csv', 'pdf'].forEach(format => { $(`#${format}-export`).href = `/api/meetings/${meeting.id}/export/${format}`; }); $('#results').hidden = false; $('#results').scrollIntoView({ behavior: 'smooth', block: 'start' }); setStatus('Встреча готова'); }
+async function removeMeeting(id) { if (!confirm('Удалить эту встречу?')) return; await api(`/api/meetings/${id}`, { method: 'DELETE' }); $('#results').hidden = true; $('.workspace').classList.remove('show-results'); await loadMeetings(); }
+function showResults(protocol, meeting) { state.selected = meeting.id; $('#result-title').textContent = meeting.filename; $('#summary').textContent = protocol.summary || 'Нет summary'; fillList('#decisions', protocol.decisions); fillList('#actions', protocol.action_items, true); fillList('#risks', protocol.risks); ['json', 'csv', 'pdf'].forEach(format => { $(`#${format}-export`).href = `/api/meetings/${meeting.id}/export/${format}`; }); $('.workspace').classList.add('show-results'); $('#results').hidden = false; $('#results').scrollIntoView({ behavior: 'smooth', block: 'start' }); setStatus('Встреча готова'); }
 function fillList(selector, items = [], actions = false) { $(selector).innerHTML = items.length ? items.map(item => `<li>${escapeHtml(typeof item === 'string' ? item : `${item.task || item.text || ''}${actions && item.assignee ? ` — ${item.assignee}` : ''}`)}</li>`).join('') : '<li class="muted-item">Нет данных</li>'; }
 async function askQuestion() { if (!state.selected) return; const input = $('#chat-question'); if (!input.value.trim()) return; $('#chat-answer').textContent = 'Думаю...'; try { const result = await api(`/api/meetings/${state.selected}/chat`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ question: input.value.trim() }) }); $('#chat-answer').textContent = result.answer; } catch (error) { $('#chat-answer').textContent = error.message; } }
 function formatDuration(seconds) { const minutes = Math.floor(seconds / 60); return `${minutes} мин`; }
