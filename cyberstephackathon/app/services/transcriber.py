@@ -42,14 +42,29 @@ class Transcriber:
         if not path.is_file():
             raise FileNotFoundError(f"Audio file not found: {path}")
 
-        segments, info = self._get_model().transcribe(
-            str(path), language=self.config.whisper_language, vad_filter=True
-        )
+        language = self.config.whisper_language or None
+        segments, info = self._get_model().transcribe(str(path), language=language, vad_filter=True)
         transcript_segments = [
             TranscriptSegment(start=segment.start, end=segment.end, speaker="UNKNOWN", text=segment.text.strip())
             for segment in segments
             if segment.text.strip()
         ]
+        if self.config.diarization_enabled and transcript_segments:
+            from app.services.diarizer import Diarizer
+
+            speaker_turns = Diarizer(self.config).diarize(path)
+            for transcript_segment in transcript_segments:
+                overlaps = {
+                    turn["speaker"]: max(
+                        0.0,
+                        min(transcript_segment.end, float(turn["end"]))
+                        - max(transcript_segment.start, float(turn["start"])),
+                    )
+                    for turn in speaker_turns
+                    if min(transcript_segment.end, float(turn["end"])) > max(transcript_segment.start, float(turn["start"]))
+                }
+                if overlaps:
+                    transcript_segment.speaker = max(overlaps, key=overlaps.get)
         return MeetingTranscript(
             segments=transcript_segments,
             language=info.language,

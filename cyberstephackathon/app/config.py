@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     app_name: str = Field(default="AirGap", validation_alias="APP_NAME")
     app_env: str = Field(default="development", validation_alias="APP_ENV")
     log_level: str = Field(default="INFO", validation_alias="LOG_LEVEL")
+    max_upload_size_mb: int = Field(default=500, validation_alias="MAX_UPLOAD_SIZE_MB", ge=1, le=4096)
 
     data_dir: Path = Field(default=Path("data"), validation_alias="DATA_DIR")
     uploads_dir: Path = Field(default=Path("data/uploads"), validation_alias="UPLOADS_DIR")
@@ -25,6 +26,9 @@ class Settings(BaseSettings):
     whisper_compute_type: str = Field(default="int8", validation_alias="WHISPER_COMPUTE_TYPE")
     whisper_device: str = Field(default="cpu", validation_alias="WHISPER_DEVICE")
     whisper_language: str | None = Field(default=None, validation_alias="WHISPER_LANGUAGE")
+    diarization_enabled: bool = Field(default=False, validation_alias="DIARIZATION_ENABLED")
+    diarization_model: str = Field(default="pyannote/speaker-diarization-3.1", validation_alias="DIARIZATION_MODEL")
+    huggingface_token: str | None = Field(default=None, validation_alias="HUGGINGFACE_TOKEN")
 
     ollama_base_url: str = Field(default="http://localhost:11434", validation_alias="OLLAMA_BASE_URL")
     ollama_model: str = Field(default="qwen2.5:0.5b", validation_alias="OLLAMA_MODEL")
