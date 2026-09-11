@@ -1,0 +1,3 @@
+# Optional local transcription dependencies.
+# Recommended Python version: 3.11 on Intel macOS.
+faster-whisper==1.1.1

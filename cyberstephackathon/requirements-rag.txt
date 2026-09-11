@@ -1,0 +1,7 @@
+# Optional local RAG dependencies.
+# ChromaDB/onnxruntime may require a separate compatible Python environment.
+langchain==0.3.14
+langchain-community==0.3.14
+langchain-chroma==0.2.1
+chromadb==0.6.3
+sentence-transformers==3.3.1

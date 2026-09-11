@@ -1,0 +1,5 @@
+# Optional diarization dependencies.
+# Recommended Python version: 3.11 on Intel macOS.
+pyannote.audio==3.3.2
+torch==2.2.2
+torchaudio==2.2.2

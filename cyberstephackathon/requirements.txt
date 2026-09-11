@@ -1,0 +1,22 @@
+# Core API and configuration
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+pydantic==2.10.4
+pydantic-settings==2.7.1
+python-dotenv==1.0.1
+python-multipart==0.0.20
+
+# Local LLM
+httpx==0.28.1
+ollama==0.4.7
+
+# Storage, UI, and exports
+streamlit==1.41.1
+pandas==2.2.3
+reportlab==4.2.5
+
+# Optional integrations
+jira==3.8.0
+py-trello==0.19.0
+notion-client==2.3.0
+ics==0.7.2
