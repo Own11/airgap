@@ -1,1 +1,92 @@
-<!doctype html><html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AirGap</title><link rel="stylesheet" href="/static/styles.css"></head><body><header><a class="logo" href="#">◒ airgap</a><nav><a href="#features" data-t="features">Возможности</a><a href="#security" data-t="security">Приватность</a><a href="#upload" data-t="upload">Загрузить встречу</a></nav><div class="langs"><button data-l="ru">RU</button><button data-l="kz">KZ</button><button data-l="en">EN</button></div></header><main><section class="hero"><div><label>● <span data-t="label">ЛОКАЛЬНЫЙ AI ДЛЯ ВСТРЕЧ</span></label><h1 data-t="title">Разговоры,<br><i>которые работают.</i></h1><p data-t="intro">AirGap превращает аудио встреч в решения, задачи и инсайты. Всё локально. Всё под контролем.</p><a class="btn" href="#upload" data-t="cta">Начать работу ↗</a></div><div class="visual"><div class="orb">◒<small>PRIVATE<br>BY DESIGN</small></div></div></section><div class="strip">PRIVATE BY ARCHITECTURE　✳　NO CLOUD REQUESTS　✳　RU / KZ / EN</div><section id="features"><label>● <span data-t="featuresLabel">ОДНА ВСТРЕЧА. ПЯТЬ РЕЗУЛЬТАТОВ.</span></label><h2 data-t="featuresTitle">Из шума<br><i>в ясность.</i></h2><div class="grid"><article><b>01</b><strong>◌</strong><h3 data-t="f1">Транскрибация</h3><p>MP3, WAV, M4A → точный локальный текст через Whisper.</p></article><article class="lime"><b>02</b><strong>✦</strong><h3 data-t="f2">Executive<br>Summary</h3><p>3–5 ключевых выводов за одну минуту.</p></article><article><b>03</b><strong>▤</strong><h3 data-t="f3">Протокол<br>встречи</h3><p>Решения, темы, вопросы и задачи в одном документе.</p></article></div></section><section id="upload" class="upload"><div><label>● <span data-t="uploadLabel">YOUR NEXT MEETING</span></label><h2 data-t="uploadTitle">Давайте<br><i>начнём.</i></h2><p data-t="uploadText">Загрузите запись и получите первый локальный протокол.</p></div><div class="drop" id="drop"><input id="file" type="file" accept=".mp3,.wav,.m4a,.mp4,.webm" hidden><strong id="fileName" data-t="drop">↑　Перетащите файл сюда</strong><small>MP3 · WAV · M4A · MP4 · WebM</small><button class="btn" id="send" disabled data-t="process">Обработать встречу ↗</button><output id="status"></output></div></section><section id="security" class="security"><div class="seal">◒</div><div><label>● <span data-t="securityLabel">PRIVATE BY DEFAULT</span></label><h2 data-t="securityTitle">Ваши данные<br><i>остаются вашими.</i></h2><p data-t="securityText">Никаких внешних AI API. Аудио, транскрипты и запросы обрабатываются на вашем устройстве.</p><div class="checks">✓ Локальные модели　 ✓ SQLite и ChromaDB　 ✓ Ollama / localhost</div></div></section><section id="history"><label>● YOUR WORKSPACE</label><h2 data-t="historyTitle">Последние<br><i>встречи.</i></h2><button id="refresh">Обновить ↻</button><div id="list">Загрузка...</div></section></main><footer><div><a class="logo">◒ airgap</a><p data-t="footer">Private meeting intelligence<br>для команд, которые думают о будущем.</p></div><div><b>PRODUCT</b><a href="#features">Features</a><a href="#upload">New meeting</a><a href="/docs">API docs ↗</a></div><div><b>PRIVACY</b><a href="#security">Local by design</a><a href="/health">System status ↗</a><a>© 2026 AirGap</a></div><strong class="footer-mark">Your data.<br><i>Your device.</i></strong></footer><script src="/static/app.js"></script></body></html>
+<!doctype html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>AirGap — Meeting Intelligence</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+
+<body>
+    <header><a class="logo" href="#"><img src="/static/assets/airgap-logo.png" alt="AirGap"> airgap</a>
+        <nav><a href="#features">Возможности</a><a href="#security">Приватность</a><a href="#upload">Начать</a></nav>
+        <div class="langs"><button data-l="ru">RU</button><button data-l="kz">KZ</button><button data-l="en">EN</button>
+        </div>
+    </header>
+    <main>
+        <section class="hero reveal">
+            <div><label>● AI ДЛЯ ВСТРЕЧ И КОМАНД</label>
+                <h1>Разговоры,<br><i>которые работают.</i></h1>
+                <p>AirGap превращает аудио встреч в решения, задачи и инсайты. Всё важное — в одном понятном
+                    пространстве.</p><a class="btn auth-trigger" href="#">Начать работу ↗</a>
+            </div>
+            <div class="visual">
+                <div class="orb">◒<small>MEETING<br>INTELLIGENCE</small></div>
+            </div>
+        </section>
+        <div class="strip">MEETINGS THAT MOVE TEAMS FORWARD　✳　AI-POWERED　✳　RU / KZ / EN</div>
+        <section id="features" class="reveal"><label>● ОДНА ВСТРЕЧА. ПЯТЬ РЕЗУЛЬТАТОВ.</label>
+            <h2>Из шума<br><i>в ясность.</i></h2>
+            <div class="grid">
+                <article><b>01</b><strong>◌</strong>
+                    <h3>Транскрибация</h3>
+                    <p>MP3, WAV, M4A → точный текст встречи.</p>
+                </article>
+                <article class="lime"><b>02</b><strong>✦</strong>
+                    <h3>Executive<br>Summary</h3>
+                    <p>3–5 ключевых выводов за одну минуту.</p>
+                </article>
+                <article><b>03</b><strong>▤</strong>
+                    <h3>Протокол<br>встречи</h3>
+                    <p>Решения, темы, вопросы и задачи в одном документе.</p>
+                </article>
+            </div>
+        </section>
+        <section id="upload" class="upload reveal">
+            <div><label>● YOUR NEXT MEETING</label>
+                <h2>Давайте<br><i>начнём.</i></h2>
+                <p>Загрузите запись и получите готовый протокол встречи.</p>
+            </div>
+            <div class="drop" id="drop"><input id="file" type="file" accept=".mp3,.wav,.m4a,.mp4,.webm" hidden><strong
+                    id="fileName">↑　Перетащите файл сюда</strong><small>MP3 · WAV · M4A · MP4 · WebM</small><button
+                    class="btn" id="send" disabled>Обработать встречу ↗</button><output id="status"></output></div>
+        </section>
+        <section id="security" class="security reveal">
+            <div class="seal">✦</div>
+            <div><label>● BUILT FOR PRODUCTIVE TEAMS</label>
+                <h2>Меньше заметок.<br><i>Больше действий.</i></h2>
+                <p>AirGap помогает командам не терять решения, договорённости и следующий шаг после каждой встречи.</p>
+                <div class="checks">✓ Summary　 ✓ Action Items　 ✓ Team workspace</div>
+            </div>
+        </section>
+        <section id="history" class="reveal"><label>● YOUR WORKSPACE</label>
+            <h2>Последние<br><i>встречи.</i></h2><button id="refresh">Обновить ↻</button>
+            <div id="list">Загрузка...</div>
+        </section>
+    </main>
+    <footer>
+        <div><a class="logo" href="#"><img src="/static/assets/airgap-logo.png" alt="AirGap"> airgap</a>
+            <p>Meeting intelligence<br>для команд, которые думают о будущем.</p>
+        </div>
+        <div><b>PRODUCT</b><a href="#features">Возможности</a><a href="#upload">Новая встреча</a><a href="/docs">API
+                docs ↗</a></div>
+        <div><b>COMPANY</b><a href="#security">О продукте</a><a href="/health">System status ↗</a><a>© 2026 AirGap</a>
+        </div><strong class="footer-mark">Your data.<br><i>Your workflow.</i></strong>
+    </footer>
+    <div class="modal" id="auth">
+        <div class="auth-card"><button class="close" id="close">×</button>
+            <div class="logo"><img src="/static/assets/airgap-logo.png" alt="AirGap"> airgap</div>
+            <h2 id="auth-title">Добро пожаловать</h2>
+            <p id="auth-subtitle">Войдите, чтобы продолжить работу со встречами.</p>
+            <div class="tabs"><button class="selected" id="login-tab">Войти</button><button
+                    id="register-tab">Регистрация</button></div><input id="auth-name" placeholder="Имя"
+                class="register-only"><input id="auth-email" type="email" placeholder="Email"><input id="auth-password"
+                type="password" placeholder="Пароль"><button class="btn auth-submit" id="auth-submit">Войти
+                ↗</button><small>Продолжая, вы принимаете условия использования AirGap.</small>
+        </div>
+    </div>
+    <script src="/static/app.js"></script>
+</body>
+
+</html>

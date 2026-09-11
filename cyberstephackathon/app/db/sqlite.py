@@ -1,4 +1,5 @@
 import sqlite3
+import json
 from pathlib import Path
 from typing import Any
 
@@ -42,3 +43,20 @@ class SQLiteDatabase:
                 "FROM meetings ORDER BY created_at DESC"
             ).fetchall()
             return [dict(row) for row in rows]
+
+    def get_meeting(self, meeting_id: int) -> dict[str, Any] | None:
+        with sqlite3.connect(self.config.sqlite_path) as connection:
+            connection.row_factory = sqlite3.Row
+            row = connection.execute("SELECT * FROM meetings WHERE id = ?", (meeting_id,)).fetchone()
+            return dict(row) if row else None
+
+    def update_meeting(self, meeting_id: int, **fields: Any) -> None:
+        allowed = {"status", "language", "duration", "transcript_json", "protocol_json"}
+        values = {key: value for key, value in fields.items() if key in allowed}
+        if not values:
+            return
+        assignments = ", ".join(f"{key} = ?" for key in values)
+        with sqlite3.connect(self.config.sqlite_path) as connection:
+            connection.execute(
+                f"UPDATE meetings SET {assignments} WHERE id = ?", (*values.values(), meeting_id)
+            )

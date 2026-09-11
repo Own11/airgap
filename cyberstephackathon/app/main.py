@@ -8,12 +8,14 @@ from fastapi.staticfiles import StaticFiles
 from app.config import get_settings
 from app.db.sqlite import SQLiteDatabase
 from app.api.routes_upload import router as upload_router
+from app.api.routes_process import router as process_router
 
 settings = get_settings()
 logging.basicConfig(level=settings.log_level, format="%(asctime)s | %(levelname)s | %(name)s | %(message)s")
 
 app = FastAPI(title=settings.app_name, version="0.1.0")
 app.include_router(upload_router)
+app.include_router(process_router)
 frontend_dir = Path(__file__).resolve().parent.parent / "frontend"
 app.mount("/static", StaticFiles(directory=frontend_dir), name="static")
 
