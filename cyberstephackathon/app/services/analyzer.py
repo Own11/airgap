@@ -39,5 +39,27 @@ class MeetingAnalyzer:
             )
             response.raise_for_status()
         payload: dict[str, Any] = response.json()
-        result = json.loads(payload["response"])
-        return MeetingProtocol.model_validate(result)
+        raw = str(payload.get("response", "")).strip()
+        try:
+            result = json.loads(raw)
+        except json.JSONDecodeError:
+            # Small models sometimes wrap JSON in prose or produce a truncated object.
+            # Recover the first complete JSON object before falling back safely.
+            start, end = raw.find("{"), raw.rfind("}")
+            if start >= 0 and end > start:
+                try:
+                    result = json.loads(raw[start : end + 1])
+                except json.JSONDecodeError:
+                    result = None
+            else:
+                result = None
+        if isinstance(result, dict):
+            try:
+                return MeetingProtocol.model_validate(result)
+            except Exception:
+                pass
+        fallback = " ".join(segment.text for segment in transcript.segments).strip()
+        return MeetingProtocol(
+            summary=fallback[:500] or "Встреча обработана, но модель не сформировала структурированный протокол.",
+            decisions=[], topics=[], open_questions=[], action_items=[], risks=[],
+        )
