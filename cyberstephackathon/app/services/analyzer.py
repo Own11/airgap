@@ -58,8 +58,7 @@ class MeetingAnalyzer:
                 return MeetingProtocol.model_validate(result)
             except Exception:
                 pass
-        fallback = " ".join(segment.text for segment in transcript.segments).strip()
         return MeetingProtocol(
-            summary=fallback[:500] or "Встреча обработана, но модель не сформировала структурированный протокол.",
+            summary="Транскрипция готова, но локальная модель не смогла сформировать структурированный протокол. Попробуйте повторить анализ или выбрать более крупную модель.",
             decisions=[], topics=[], open_questions=[], action_items=[], risks=[],
         )
