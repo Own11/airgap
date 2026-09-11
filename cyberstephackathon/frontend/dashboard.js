@@ -1,3 +1,82 @@
-const user=document.querySelector('#user'),list=document.querySelector('#meetings'),status=document.querySelector('#status'),results=document.querySelector('#results');async function init(){const r=await fetch('/api/auth/me',{credentials:'include'});if(!r.ok){location.href='/';return}user.textContent=(await r.json()).name;load()}async function load(){const r=await fetch('/api/meetings',{credentials:'include'});const a=await r.json();document.querySelector('#count').textContent=a.length;list.innerHTML=a.length?a.map(x=>`<div class="meeting" data-id="${x.id}"><span>◒ ${x.filename}</span><small>${x.status.toUpperCase()} · ${x.created_at}</small></div>`).join(''):'<div class="empty">Встреч пока нет.</div>';document.querySelectorAll('.meeting').forEach(x=>x.onclick=()=>openMeeting(Number(x.dataset.id)))}async function process(id){status.textContent='Обрабатываем встречу...';await fetch(`/api/meetings/${id}/process`,{method:'POST',credentials:'include'});for(let i=0;i<180;i++){await new Promise(r=>setTimeout(r,1000));const item=await(await fetch(`/api/meetings/${id}`,{credentials:'include'})).json();if(item.status==='transcribed'){status.textContent='Анализируем протокол...';const r=await fetch(`/api/meetings/${id}/analyze`,{method:'POST',credentials:'include'});if(r.ok)show(await r.json(),id);return}if(item.status==='failed'){status.textContent='Не удалось обработать запись';return}}}async function openMeeting(id){const item=await(await fetch(`/api/meetings/${id}`,{credentials:'include'})).json();if(item.protocol_json)show(item.protocol_json,id);else process(id)}function show(p,id){results.classList.add('open');document.querySelector('#summary').textContent=p.summary;const fill=(q,a)=>document.querySelector(q).innerHTML=(a||[]).map(x=>`<li>${typeof x==='string'?x:(x.task+' — '+(x.assignee||'не назначено'))}</li>`).join('')||'<li>Нет данных</li>';fill('#decisions',p.decisions);fill('#actions',p.action_items);fill('#risks',p.risks);['json','csv','pdf'].forEach(x=>document.querySelector('#'+x+'-export').href=`/api/meetings/${id}/export/${x}`);status.textContent='Готово'}document.querySelector('#logout').onclick=async()=>{await fetch('/api/auth/logout',{method:'POST',credentials:'include'});location.href='/'};const file=document.querySelector('#file'),drop=document.querySelector('#drop'),send=document.querySelector('#send'),name=document.querySelector('#fileName');let selected;drop.onclick=e=>{if(e.target!==send)file.click()};file.onchange=()=>{selected=file.files[0];if(selected){name.textContent=selected.name;send.disabled=false}};send.onclick=async()=>{const d=new FormData();d.append('file',selected);send.disabled=true;const r=await fetch('/api/meetings',{method:'POST',body:d,credentials:'include'});if(r.ok){const x=await r.json();load();process(x.id)}else{status.textContent='Ошибка загрузки';send.disabled=false}};init();
-const chatBox=document.createElement('div');chatBox.className='result chat-box';chatBox.innerHTML='<h3>Chat по встрече</h3><input id="chat-question" placeholder="Что обсуждали о бюджете?"><button class="btn" id="chat-send">Спросить ↗</button><p id="chat-answer"></p>';document.querySelector('#results')?.append(chatBox);document.querySelector('#chat-send')?.addEventListener('click',async()=>{if(!activeId)return;const question=document.querySelector('#chat-question').value;const answer=document.querySelector('#chat-answer');answer.textContent='Думаю...';const response=await fetch(`/api/meetings/${activeId}/chat`,{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({question})});const data=await response.json();answer.textContent=response.ok?data.answer:data.detail||'Не удалось получить ответ'});
-let activeId=null;const originalShow=show;show=(protocol,id)=>{activeId=id;originalShow(protocol,id)};
+const $ = (selector) => document.querySelector(selector);
+const state = { meetings: [], selected: null, file: null };
+const statusText = { uploaded: 'Готово к обработке', processing: 'Обрабатывается', transcribed: 'Транскрипция готова', analyzed: 'Готово', failed: 'Ошибка' };
+
+async function api(url, options = {}) {
+  const response = await fetch(url, { credentials: 'include', ...options });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.detail || 'Что-то пошло не так');
+  return data;
+}
+
+async function init() {
+  try { const user = await api('/api/auth/me'); $('#user').textContent = user.name; await loadMeetings(); }
+  catch { location.href = '/'; }
+  $('#choose').onclick = () => $('#file').click();
+  $('#file').onchange = () => selectFile($('#file').files[0]);
+  $('#send').onclick = upload;
+  $('#refresh').onclick = loadMeetings;
+  $('#search').oninput = renderMeetings;
+  $('#close-results').onclick = () => { $('#results').hidden = true; state.selected = null; };
+  $('#logout').onclick = async () => { await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' }); location.href = '/'; };
+  $('#drop').ondragover = (event) => { event.preventDefault(); $('#drop').classList.add('dragging'); };
+  $('#drop').ondragleave = () => $('#drop').classList.remove('dragging');
+  $('#drop').ondrop = (event) => { event.preventDefault(); $('#drop').classList.remove('dragging'); selectFile(event.dataTransfer.files[0]); };
+  $('#chat-send').onclick = askQuestion;
+}
+
+function selectFile(file) {
+  if (!file) return;
+  const allowed = ['mp3', 'wav', 'm4a', 'mp4', 'webm'];
+  const extension = file.name.split('.').pop().toLowerCase();
+  if (!allowed.includes(extension)) return setStatus('Поддерживаются MP3, WAV, M4A, MP4 и WebM');
+  state.file = file; $('#fileName').textContent = file.name; $('#send').disabled = false; setStatus(`${(file.size / 1024 / 1024).toFixed(1)} MB · готово к обработке`);
+}
+
+function setStatus(message) { $('#status').textContent = message; }
+
+async function upload() {
+  if (!state.file) return;
+  $('#send').disabled = true; setStatus('Загружаем запись...');
+  const form = new FormData(); form.append('file', state.file);
+  try { const meeting = await api('/api/meetings', { method: 'POST', body: form }); state.file = null; $('#file').value = ''; $('#fileName').textContent = 'Выберите файл'; await loadMeetings(); await processMeeting(meeting.id); }
+  catch (error) { setStatus(error.message); $('#send').disabled = false; }
+}
+
+async function processMeeting(id) {
+  setStatus('Транскрибируем запись...');
+  try {
+    await api(`/api/meetings/${id}/process`, { method: 'POST' });
+    for (let attempt = 0; attempt < 180; attempt += 1) {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      const meeting = await api(`/api/meetings/${id}`); await loadMeetings(false);
+      if (meeting.status === 'failed') throw new Error(meeting.error_message || 'Не удалось обработать запись');
+      if (meeting.status === 'transcribed') { setStatus('Создаём протокол...'); const protocol = await api(`/api/meetings/${id}/analyze`, { method: 'POST' }); showResults(protocol, meeting); return; }
+    }
+    throw new Error('Обработка занимает больше времени. Проверьте встречу позже.');
+  } catch (error) { setStatus(error.message); $('#send').disabled = false; await loadMeetings(false); }
+}
+
+async function loadMeetings(showLoading = true) {
+  if (showLoading) $('#meetings').innerHTML = '<div class="loading-state">Загрузка встреч...</div>';
+  try { state.meetings = await api('/api/meetings'); renderMeetings(); }
+  catch (error) { $('#meetings').innerHTML = `<div class="empty-state"><b>Не удалось загрузить встречи</b><span>${error.message}</span></div>`; }
+}
+
+function renderMeetings() {
+  const query = ($('#search').value || '').toLowerCase();
+  const meetings = state.meetings.filter(item => item.filename.toLowerCase().includes(query));
+  if (!meetings.length) { $('#meetings').innerHTML = `<div class="empty-state"><span class="empty-icon">◌</span><b>${query ? 'Ничего не найдено' : 'Встреч пока нет'}</b><span>${query ? 'Попробуйте другой запрос' : 'Загрузите первую запись, чтобы увидеть её здесь'}</span></div>`; return; }
+  $('#meetings').innerHTML = meetings.map(meeting => `<article class="meeting-card" data-id="${meeting.id}"><div class="meeting-icon">◒</div><div class="meeting-info"><h3>${escapeHtml(meeting.filename)}</h3><span>${meeting.language ? meeting.language.toUpperCase() : '—'} · ${meeting.duration ? formatDuration(meeting.duration) : 'длительность неизвестна'}</span></div><div class="meeting-status ${meeting.status}"><i></i>${statusText[meeting.status] || meeting.status}</div><button class="delete-meeting" data-delete="${meeting.id}" aria-label="Удалить встречу">×</button></article>`).join('');
+  document.querySelectorAll('.meeting-card').forEach(card => card.onclick = (event) => { if (!event.target.closest('[data-delete]')) openMeeting(Number(card.dataset.id)); });
+  document.querySelectorAll('[data-delete]').forEach(button => button.onclick = (event) => { event.stopPropagation(); removeMeeting(Number(button.dataset.delete)); });
+}
+
+async function openMeeting(id) { const meeting = await api(`/api/meetings/${id}`); if (meeting.protocol_json) showResults(meeting.protocol_json, meeting); else if (meeting.status === 'uploaded' || meeting.status === 'failed') processMeeting(id); else setStatus('Встреча ещё обрабатывается...'); }
+async function removeMeeting(id) { if (!confirm('Удалить эту встречу?')) return; await api(`/api/meetings/${id}`, { method: 'DELETE' }); $('#results').hidden = true; await loadMeetings(); }
+function showResults(protocol, meeting) { state.selected = meeting.id; $('#result-title').textContent = meeting.filename; $('#summary').textContent = protocol.summary || 'Нет summary'; fillList('#decisions', protocol.decisions); fillList('#actions', protocol.action_items, true); fillList('#risks', protocol.risks); ['json', 'csv', 'pdf'].forEach(format => { $(`#${format}-export`).href = `/api/meetings/${meeting.id}/export/${format}`; }); $('#results').hidden = false; $('#results').scrollIntoView({ behavior: 'smooth', block: 'start' }); setStatus('Встреча готова'); }
+function fillList(selector, items = [], actions = false) { $(selector).innerHTML = items.length ? items.map(item => `<li>${escapeHtml(typeof item === 'string' ? item : `${item.task || item.text || ''}${actions && item.assignee ? ` — ${item.assignee}` : ''}`)}</li>`).join('') : '<li class="muted-item">Нет данных</li>'; }
+async function askQuestion() { if (!state.selected) return; const input = $('#chat-question'); if (!input.value.trim()) return; $('#chat-answer').textContent = 'Думаю...'; try { const result = await api(`/api/meetings/${state.selected}/chat`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ question: input.value.trim() }) }); $('#chat-answer').textContent = result.answer; } catch (error) { $('#chat-answer').textContent = error.message; } }
+function formatDuration(seconds) { const minutes = Math.floor(seconds / 60); return `${minutes} мин`; }
+function escapeHtml(value) { return String(value).replace(/[&<>'"]/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[character])); }
+init();
