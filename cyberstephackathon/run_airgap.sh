@@ -12,6 +12,11 @@ fi
 
 if [ ! -x "stt-venv/bin/python" ]; then
   "$PYTHON_BIN" -m venv stt-venv
+fi
+
+# The virtual environment may already exist without the optional STT package.
+# Check the import instead of relying only on the directory presence.
+if ! stt-venv/bin/python -c "import faster_whisper" >/dev/null 2>&1; then
   stt-venv/bin/python -m pip install -r requirements.txt -r requirements-stt.txt
 fi
 
