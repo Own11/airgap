@@ -68,8 +68,9 @@ async function loadMeetings(showLoading = true) {
 function renderHistory() {
   const history = $('#history-list');
   if (!state.meetings.length) { history.innerHTML = '<span class="history-empty">Пока нет встреч</span>'; return; }
-  history.innerHTML = state.meetings.slice(0, 12).map(item => `<button class="history-item" data-history="${item.id}"><span class="history-dot">●</span><span>${escapeHtml(item.filename)}</span></button>`).join('');
+  history.innerHTML = state.meetings.slice(0, 12).map(item => `<div class="history-row"><button class="history-item" data-history="${item.id}"><span class="history-dot">●</span><span>${escapeHtml(item.filename)}</span></button><button class="history-delete" data-history-delete="${item.id}" aria-label="Удалить встречу">×</button></div>`).join('');
   document.querySelectorAll('[data-history]').forEach(item => item.onclick = () => openMeeting(Number(item.dataset.history)));
+  document.querySelectorAll('[data-history-delete]').forEach(item => item.onclick = (event) => { event.stopPropagation(); removeMeeting(Number(item.dataset.historyDelete)); });
 }
 
 function renderMeetings() {
